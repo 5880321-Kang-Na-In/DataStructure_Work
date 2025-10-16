@@ -99,7 +99,19 @@ struct Node* makeBST(int arr[], struct Node*Root)
 			// 루트보다 수가 작다면
 			if (arr[i] < Root->data)
 			{
-
+				// 왼쪽 주소에 연결된 게 없다면
+				if (Root->leftNode_add == NULL)
+				{
+					// 연결하고 초기화
+					// Q. 이 반복문 내에서 실행을 하면, 변수 이름이 겹치지 않게 이 변수를 여러번 만들어야 하니 따로 함수 작성해야 함
+					// Q. 주소가 NULL일 때까지 계속 타고타고 들어가야 함
+					// Q. 그냥 여기서 이러지 말고, 루트 생성 함수를 새 노드 생성 함수로 바꿔쓸까
+					struct Node*left= (struct Node*)malloc(sizeof(struct Node));
+					left->data = arr[i];
+					left->leftNode_add = NULL;
+					left->rightNode_add = NULL;
+					Root->leftNode_add = left;
+				}
 			}
 			// 루트보다 수가 크다면
 			else
