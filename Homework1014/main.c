@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h> // 동적 할당 관련 함수를 위해 필요
 #include <time.h>
 #define ARR_SIZE 1000
 
@@ -8,6 +9,7 @@ struct Node {
 	int data;
 	struct Node* leftNode_add;
 	struct Node* rightNode_add;
+	// int leftHeight, rightHeight 도 추가?
 };
 
 // 1번 배열에 값을 저장
@@ -15,7 +17,17 @@ struct Node {
 void makeArray1(int arr[])
 {
 	for (int i = 0; i < ARR_SIZE; i++)
-		arr[i] = rand() % (ARR_SIZE*10+1);
+	{
+		int num = rand() % (ARR_SIZE * 10 + 1);
+		// 중복 확인
+		if (checkRepeat(num, arr, i) == 1)
+		{
+			i--;
+			continue;
+		}
+		else
+			arr[i] = num;
+	}
 }
 
 // 2번 배열에 값을 저장
@@ -42,39 +54,93 @@ void makeArray4(int arr[])
 		arr[i] = i * (i % 2 + 2);
 }
 
+// 배열 초기화 중 생성한 난수가, 
+// 기존 배열에 저장되어 있는 수인지 중복을 확인
+// 1이 되면 중복이 있고, 0이 되면 중복이 없음
+int checkRepeat(int num, int arr[], int index)
+{
+	 // 배열의 모든 값과 비교
+	for (int i = 0; i < index; i++)
+	{
+		if (num == arr[i]) return 1;
+	}
+	return 0;
+}
+
+// 트리의 루트 노드를 가리킬 주소 생성
+struct Node* makeRoot()
+{
+	struct Node* Root = (struct Node*)malloc(sizeof(struct Node));
+	if (Root == NULL) exit(1);
+	Root->data = 0;
+	Root->leftNode_add = NULL;
+	Root->rightNode_add = NULL;
+	return Root;
+}
 
 // 이진탐색트리 배열의 첫 수를 기준으로 두고,
 // 작으면 기준 수의 왼쪽 노드 주소에 추가, 새 노드 생성
 // 크면 오른쪽에
-struct Node* makeHead()
+struct Node* makeBST(int arr[], struct Node*Root)
 {
-	struct Node* Head = (struct Node*)malloc(sizeof(struct Node*));
-	if (Head == NULL) exit(1);
-	return Head;
+	for (int i = 0; i < ARR_SIZE; i++)
+	{
+		// 배열 처음에 대해서
+		// Q. switch 문으로도 될까
+		if (i == 0)
+		{
+			Root->data = arr[i];
+		}
+		// 이후의 인덱스에 대해서
+		else
+		{
+			// 루트랑 비교해서 작은지 큰지 봐야 함
+			// 작은지 큰지 비교한 후 주소가 눌이면 새 노드 생성해서 연결
+			// 루트보다 수가 작다면
+			if (arr[i] < Root->data)
+			{
+
+			}
+			// 루트보다 수가 크다면
+			else
+			{
+
+			}
+		}
+	}
+	return Root;
 }
 
 void main()
 {
 	srand(time(NULL));
-	int arr1[ARR_SIZE],arr2[ARR_SIZE], arr3[ARR_SIZE], arr4[ARR_SIZE] = { 0 };
+	
+	// 배열 선언 및 초기화
+	// Q.이렇게 쓰면 왜 arr4만 {10000, 0, 0, ...}으로 초기화되고, 왜 나머지 배열에는 쓰레기값이 담기는가?
+	//int arr1[ARR_SIZE],arr2[ARR_SIZE], arr3[ARR_SIZE], arr4[ARR_SIZE] = { 10001 };
+	int arr1[ARR_SIZE], arr2[ARR_SIZE], arr3[ARR_SIZE], arr4[ARR_SIZE];
 	makeArray1(arr1);
 	makeArray2(arr2);
 	makeArray3(arr3);
 	makeArray4(arr4);
 
-	struct Node* Head1_BST = makeHead();
-	Head1_BST->data = 2;
-	printf("%d", Head1_BST->data);
-	struct Node* Head1_AVL = makeHead();
+	struct Node* Root1_BST = makeRoot();
+	// 이진탐색트리에 저장하려면
+	// 일단 맨 처음은 루트에, 헤드에 저장해
+	// 그 다음 수는 루트와 비교 > 루트보다 크면, 루트의 오른쪽주소를 보고, 없으면 추가 / 있으면 그 주소로 이동해 다시 비교
+	// 작으면 왼쪽주소
+	// Q. 반환 없이 함수 실행이 더 좋을텐데 그러려면 포인터에 대한 포인터 어쩌구가 복잡해서
+	Root1_BST = makeBST(arr1, Root1_BST);
+	struct Node* Root1_AVL = makeRoot();
 
-	struct Node* Head2_BST = makeHead();
-	struct Node* Head2_AVL = makeHead();
+	struct Node* Root2_BST = makeRoot();
+	struct Node* Root2_AVL = makeRoot();
 
-	struct Node* Head3_BST = makeHead();
-	struct Node* Head3_Bst = makeHead();
+	struct Node* Root3_BST = makeRoot();
+	struct Node* Root3_Bst = makeRoot();
 
-	struct Node* Head4_BST = makeHead();
-	struct Node* Head4_AVL = makeHead();
+	struct Node* Root4_BST = makeRoot();
+	struct Node* Root4_AVL = makeRoot();
 }
 
 //데이터
