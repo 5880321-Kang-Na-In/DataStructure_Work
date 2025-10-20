@@ -9,6 +9,7 @@ struct Node {
 	int data;
 	struct Node* leftNode_add;
 	struct Node* rightNode_add;
+	int height; // 현재 노드를 루트로 하는 서브 트리의 높이
 	// int leftHeight, rightHeight 도 추가?
 };
 
@@ -67,6 +68,10 @@ int checkRepeat(int num, int arr[], int index)
 	return 0;
 }
 
+
+
+
+
 // 트리의 루트 노드를 가리킬 주소 생성
 struct Node* makeNewNode(int num)
 {
@@ -75,6 +80,7 @@ struct Node* makeNewNode(int num)
 	temp->data = num;
 	temp->leftNode_add = NULL;
 	temp->rightNode_add = NULL;
+	temp->height = 1; // 새 노드는 처음에 높이가 1
 	return temp;
 }
 
@@ -139,6 +145,125 @@ struct Node* makeBST(int arr[], struct Node*Root)
 	return Root;
 }
 
+
+
+
+
+
+// AVL 구현용
+// 두 정수 중 큰 값을 반환
+int my_max(int a, int b)
+{
+	return (a > b) ? a : b;
+}
+
+// AVL 구현용
+// 노드의 높이를 반환 (NULL인 경우 0)
+int height(struct Node*Node) {
+	if (Node == NULL)
+		return 0;
+	return Node->height;
+}
+
+// AVL 구현용
+// 노드의 균형 인자(Balance Factor)를 계산하여 반환
+// 균형 인자 = 왼쪽 서브트리 높이 - 오른쪽 서브트리 높이
+int getBalance(struct Node* Node) {
+	if (Node == NULL)
+		return 0;
+	return height(Node->leftNode_add) - height(Node->rightNode_add);
+}
+
+
+
+
+
+
+// 오른쪽 회전 (Right Rotation) - LL Case에 사용
+struct Node* rightRotate(struct Node* z) {
+	struct Node* y = z->leftNode_add;
+	struct Node* T3 = y->rightNode_add;
+
+	// 회전 수행
+	y->rightNode_add = z;
+	z->leftNode_add = T3;
+
+	// 높이 갱신 (자식 노드 z부터 먼저 갱신)
+	z->height = my_max(height(z->leftNode_add), height(z->rightNode_add)) + 1;
+	y->height = my_max(height(y->leftNode_add), height(y->rightNode_add)) + 1;
+
+	// 새로운 루트 y 반환
+	return y;
+}
+
+// 왼쪽 회전 (Left Rotation) - RR Case에 사용
+struct Node* leftRotate(struct Node* z) {
+	struct Node* y = z->rightNode_add;
+	struct Node* T2 = y->leftNode_add;
+
+	// 회전 수행
+	y->leftNode_add = z;
+	z->rightNode_add = T2;
+
+	// 높이 갱신 (자식 노드 z부터 먼저 갱신)
+	z->height = my_max(height(z->leftNode_add), height(z->rightNode_add)) + 1;
+	y->height = my_max(height(y->leftNode_add), height(y->rightNode_add)) + 1;
+
+	// 새로운 루트 y 반환
+	return y;
+}
+
+// AVL 구현
+// key 값을 AVL 트리에 삽입하고 새로운 루트 노드를 반환 (재귀적)
+struct Node* insert(struct Node* node, int data) {
+	// 1. 일반 BST 삽입 수행
+	if (node == NULL)
+		return makeNewNode(data);
+
+	if (data < node->data)
+		node->leftNode_add = insert(node->leftNode_add, data);
+	else if (data > node->data)
+		node->rightNode_add = insert(node->rightNode_add, data);
+	//else // 중복된 키는 무시
+	//	return node;
+
+	// 2. 현재 노드의 높이 갱신
+	node->height = 1 + my_max(height(node->leftNode_add), height(node->rightNode_add));
+
+	// 3. 균형 인자 계산
+	int balance = getBalance(node);
+
+	// 4. 불균형 발생 시 처리 (4가지 케이스)
+
+	// LL Case (왼쪽의 왼쪽)
+	if (balance > 1 && data < node->leftNode_add->data)
+		return rightRotate(node);
+
+	// RR Case (오른쪽의 오른쪽)
+	if (balance < -1 && data > node->rightNode_add->data)
+		return leftRotate(node);
+
+	// LR Case (왼쪽의 오른쪽): 왼쪽 회전 후 오른쪽 회전
+	if (balance > 1 && data > node->leftNode_add->data) {
+		node->leftNode_add = leftRotate(node->leftNode_add);
+		return rightRotate(node);
+	}
+
+	// RL Case (오른쪽의 왼쪽): 오른쪽 회전 후 왼쪽 회전
+	if (balance < -1 && data < node->rightNode_add->data) {
+		node->rightNode_add = rightRotate(node->rightNode_add);
+		return leftRotate(node);
+	}
+
+	// 균형 잡힌 상태이거나 회전 후에는 현재 노드 반환
+	return node;
+}
+
+
+
+
+
+
 // 배열에서 탐색 / 탐색 횟수를 반환
 int srchArray(int num, int arr[])
 {
@@ -155,9 +280,9 @@ int srchArray(int num, int arr[])
 	return count;
 }
 
-// BST 이진탐색트리에서 탐색
+// BST 이진탐색트리에서 탐색 // AVL도 동일한 방식으로 탐색
 // 해당 노드의 수와 비교해 : (큰지 작은지) 같은지 / 크거나 작다면, 해당하는 주소의 노드로 옮겨서 다시 반복
-int srchBST(int num, struct Node*Root)
+int srchTree(int num, struct Node*Root)
 {
 	int count = 0;
 	// 탐색하는 노드의 주소가 끝 NULL 이 나올 때까지 비교해야, NULL이 나오면 멈춰야 함
@@ -187,15 +312,10 @@ int srchBST(int num, struct Node*Root)
 	return count;
 }
 
-// AVL에서 탐색
-int srchAVL(int num, struct Node*Root)
-{
-	int count = 0;
-	return count;
-}
 
 void main()
 {
+	// 실행마다 랜덤 수 생성 위함
 	srand(time(NULL));
 	
 	// 배열 선언 및 초기화
@@ -208,6 +328,7 @@ void main()
 	makeArray4(arr4);
 
 	// 트리 선언 및 초기화
+	// 이진 탐색 트리
 	struct Node* Root1_BST = makeNewNode(arr1[0]);
 	// 이진탐색트리에 저장하려면
 	// 일단 맨 처음은 루트에, 헤드에 저장해
@@ -215,19 +336,33 @@ void main()
 	// 작으면 왼쪽주소
 	// Q. 반환 없이 함수 실행이 더 좋을텐데 그러려면 포인터에 대한 포인터 어쩌구가 복잡해서
 	Root1_BST = makeBST(arr1, Root1_BST);
-	struct Node* Root1_AVL = makeNewNode(arr1[0]);
+
+	// AVL 트리 : 이진 탐색 트리처럼 값을 하나씩 삽입하면서 회전 연산 진행
+	struct Node* Root1_AVL = NULL;
+	for (int i = 0; i < ARR_SIZE; i++) {
+		Root1_AVL = insert(Root1_AVL, arr1[i]);
+	}
 
 	struct Node* Root2_BST = makeNewNode(arr2[0]);
 	Root2_BST = makeBST(arr2, Root2_BST);
-	struct Node* Root2_AVL = makeNewNode(arr2[0]);
+	struct Node* Root2_AVL = NULL;
+	for (int i = 0; i < ARR_SIZE; i++) {
+		Root2_AVL = insert(Root2_AVL, arr2[i]);
+	}
 
 	struct Node* Root3_BST = makeNewNode(arr3[0]);
 	Root3_BST = makeBST(arr3, Root3_BST);
-	struct Node* Root3_AVL = makeNewNode(arr3[0]);
+	struct Node* Root3_AVL = NULL;
+	for (int i = 0; i < ARR_SIZE; i++) {
+		Root3_AVL = insert(Root3_AVL, arr3[i]);
+	}
 
 	struct Node* Root4_BST = makeNewNode(arr4[0]);
 	Root4_BST = makeBST(arr4, Root4_BST);
-	struct Node* Root4_AVL = makeNewNode(arr4[0]);
+	struct Node* Root4_AVL = NULL;
+	for (int i = 0; i < ARR_SIZE; i++) {
+		Root4_AVL = insert(Root4_AVL, arr4[i]);
+	}
 
 
 	// 탐색
@@ -260,15 +395,15 @@ void main()
 		count3_Ar += srchArray(num, arr3);
 		count4_Ar += srchArray(num, arr4);
 
-		count1_BST += srchBST(num, Root1_BST);
-		count2_BST += srchBST(num, Root2_BST);
-		count3_BST += srchBST(num, Root3_BST);
-		count4_BST += srchBST(num, Root4_BST);
+		count1_BST += srchTree(num, Root1_BST);
+		count2_BST += srchTree(num, Root2_BST);
+		count3_BST += srchTree(num, Root3_BST);
+		count4_BST += srchTree(num, Root4_BST);
 
-		count1_AVL += srchAVL(num, Root1_AVL);
-		count2_AVL += srchAVL(num, Root2_AVL);
-		count3_AVL += srchAVL(num, Root3_AVL);
-		count4_AVL += srchAVL(num, Root4_AVL);
+		count1_AVL += srchTree(num, Root1_AVL);
+		count2_AVL += srchTree(num, Root2_AVL);
+		count3_AVL += srchTree(num, Root3_AVL);
+		count4_AVL += srchTree(num, Root4_AVL);
 	}
 
 	// 탐색 평균 횟수 출력
@@ -299,17 +434,3 @@ void main()
 	printf("4종류의 AVL에서의 탐색 횟수 평균 : %lf회\n", count_AVL);
 	// 해제
 }
-
-//데이터
-//(1) 0~10000 사이의 무작위 정수 1000개
-//(2) 0~999까지 정렬된 정수 1000개
-//(3) 999~0까지 정렬된 정수 1000개
-//(4) for (int i = 0; i < 1000; i++) value[i] = i * (i % 2 + 2)로 구성된 정수 1000개
-//    - 아래의 과정을 위 데이터별로 1회씩 진행한다.
-//    - 탐색을 진행할 배열을 각각, (1) 배열, (2) 이진탐색트리, (3) AVL에 순서대로 삽입한다.
-//    - 다시 0~10000 사이의 1000개의 난수를 발생시켜 각 3개의 자료구조에서 탐색을 진행한다.
-//    - 배열 탐색은 선형 탐색으로 진행한다.
-//    - 이때 각 탐색 과정에서 탐색 횟수를 기록하도록 한다.
-//    - 탐색 횟수란, 노드가 찾으려는 숫자와 일치하는지 비교한 횟수이다.
-//    - 자료를 찾지 못하더라도 마지막 탐색까지의 탐색 횟수를 기록하도록 한다.
-//    - 각 자료구조 별 1000개의 숫자를 찾는 탐색 과정에서 자료구조별 평균을 출력한다.
