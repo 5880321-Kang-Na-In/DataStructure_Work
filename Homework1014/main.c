@@ -310,6 +310,14 @@ int srchTree(int num, struct Node*Root)
 	return count;
 }
 
+// 메모리 해제 함수
+void freeTree(struct Node* node) {
+	if (node != NULL) {
+		freeTree(node->leftNode_add);
+		freeTree(node->rightNode_add);
+		free(node);
+	}
+}
 
 void main()
 {
@@ -430,5 +438,14 @@ void main()
 	printf("4종류의 데이터 배열에서의 탐색 횟수 평균 : %lf회\n", count_Ar);
 	printf("4종류의 이진 탐색 트리에서의 탐색 횟수 평균 : %lf회\n", count_BST);
 	printf("4종류의 AVL에서의 탐색 횟수 평균 : %lf회\n", count_AVL);
+
 	// 해제
+	free(Root1_BST);
+	free(Root2_BST);
+	free(Root3_BST);
+	free(Root4_BST);
+	free(Root1_AVL);
+	free(Root2_AVL);
+	free(Root3_AVL);
+	free(Root4_AVL);
 }
